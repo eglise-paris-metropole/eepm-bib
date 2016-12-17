@@ -8,124 +8,27 @@
 
 "use strict";
 
-var _ = require('lodash'),
-	MOVIES = require('./data/movies').movies,
-	BOOKS = require('./data/books').books;
+var _ = require('lodash');
+var firebase = require('firebase');
 
-// OLD CODE
-
-/**
- * Fetch all movies
- * If category query is provided, fetch movies filtered by category
- */
-exports.fetchMovies = function (req, res) {
-    var movies = [];
-    if(req.query.category){
-        movies = MOVIES.filter(function(movie){
-            return movie.category === req.query.category;
-        });
-    } else {
-        movies = MOVIES;
-    }
-
-		setTimeout(function () {
-			res.status(200).json(movies);
-		}, 1000);
+// Initialize Firebase
+var config = {
+    apiKey: "AIzaSyD5QuFb1uHRos-3VP3Qpbsm0TPPiFNaGGI",
+    authDomain: "eepm-bib-db.firebaseapp.com",
+    databaseURL: "https://eepm-bib-db.firebaseio.com",
+    storageBucket: "eepm-bib-db.appspot.com",
+    messagingSenderId: "120782703793"
 };
+firebase.initializeApp(config);
+
+console.log(firebase);
+var BOOKS;
 
 
-/**
- * Fetch a movie by id
- */
-exports.fetchMovie = function (req, res){
-    var id = req.params.id,
-
-	movie = _.find(MOVIES, function (movie) {
-		return movie.id == id;
-	});
-
-	if (movie) {
-		return res.status(200).json(movie);
-	} else {
-		return res.status(404).end();
-	}
-};
-
-/**
- * Fetch actors of a movie
- */
-exports.fetchActorsOfMovie = function(req, res){
-    var id = req.params.id,
-
-	movie = _.find(MOVIES, function (movie) {
-		return movie.id == id;
-	});
-
-	if (movie.length !== 0) {
-		return res.status(200).json(movie.actors);
-	} else {
-		return res.status(404).end();
-	}
-}
-
-/**
- * Create a movie
- */
-exports.addMovie = function (req, res) {
-    var movieToAdd = req.body;
-
-	var existingMovie = _.find(MOVIES, function (movie) {
-		return movieToAdd.title == movie.title;
-	});
-
-	if (existingMovie) {
-		return res.status(500).json({ error: 'Le film ' + existingMovie.title + ' a déjà été ajouté.' });
-	} else {
-    var maxID = _(MOVIES).map('id').max() || 0;
-		movieToAdd.id = maxID + 1;
-
-		MOVIES.push(movieToAdd);
-
-		return res.status(201).json(movieToAdd);
-	}
-};
-
-
-/**
- * Update a movie
- */
-exports.updateMovie = function(req, res) {
-    var movietoUpdate = req.body,
-		id = req.params.id;
-
-	_.forEach(MOVIES, function (movie, index) {
-		if (movie.id == id) {
-			MOVIES[index] = movietoUpdate;
-			return res.status(200).json(movietoUpdate);
-		}
-	});
-
-	return res.status(304).json(movietoUpdate);
-};
-
-
-/**
- * Delete a movie
- */
-exports.deleteMovie = function (req, res) {
-    var id = req.params.id,
-
-	removedMovies = _.remove(MOVIES, function (movie) {
-		return movie.id == id;
-	});
-
-	if (_.isEmpty(removedMovies)) {
-		return res.status(304).end();
-	} else {
-		return res.status(200).json({});
-	}
-
-};
+//var bookListRef = firebase.database().ref('booklist/');
+firebase.database().ref('booklist/').once('value').then(function(snapshot) {
+  BOOKS = snapshot.val();
+});
 
 
 
@@ -166,4 +69,64 @@ exports.fetchBook = function (req, res){
 	} else {
 		return res.status(404).end();
 	}
+};
+
+
+/**
+ * Create a book
+ */
+exports.addBook = function (req, res) {
+    var bookToAdd = req.body;
+
+	var existingBook = _.find(BOOKS, function (book) {
+		return bookToAdd.title == book.title;
+	});
+
+	if (existingBook) {
+		return res.status(500).json({ error: 'Le book ' + existingBook.title + ' a déjà été ajouté.' });
+	} else {
+    	var maxID = _(BOOK).map('id').max() || 0;
+		bookToAdd.id = maxID + 1;
+
+		BOOKS.push(bookToAdd);
+
+		return res.status(201).json(bookToAdd);
+	}
+};
+
+
+/**
+ * Update a book
+ */
+exports.updateBook = function(req, res) {
+    var bookToUpdate = req.body,
+		id = req.params.id;
+
+	_.forEach(BOOK, function (book, index) {
+		if (book.id == id) {
+			BOOKS[index] = bookToUpdate;
+			return res.status(200).json(bookToUpdate);
+		}
+	});
+
+	return res.status(304).json(bookToUpdate);
+};
+
+
+/**
+ * Delete a book
+ */
+exports.deleteBook = function (req, res) {
+    var id = req.params.id,
+
+	removedBooks = _.remove(BOOKS, function (book) {
+		return book.id == id;
+	});
+
+	if (_.isEmpty(removedBooks)) {
+		return res.status(304).end();
+	} else {
+		return res.status(200).json({});
+	}
+
 };
